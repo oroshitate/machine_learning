@@ -5,5 +5,5 @@ from netflix import scraping
 
 scr = scraping.scraping()
 scr.add_item()
-scr.add_itemmaster_g()
-scr.add_itemmaster_t()
+# scr.add_itemmaster_g()
+# scr.add_itemmaster_t()

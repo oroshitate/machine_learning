@@ -7,13 +7,13 @@ class oropondb:
       'user': 'root',
       'password': 'oroshiterec0205',
       'unix_socket': '/Applications/MAMP/tmp/mysql/mysql.sock',
-      'database': 'app_db',
+      'database': 'nphoriginal_db',
       'raise_on_warnings': True,
     }
     self.conn = mysql.connector.connect(**self.config)
     self.cursor = self.conn.cursor()
 
-  def insert_scraping(self,title,released_t,duration,genre,tag,story,actors,directors,creators):
+  def insert_scraping(self,title,released_t,duration,genre,tag,story,actors,directors,creators,img_path):
     cursor = self.cursor
     if tag == "":
       tag = None
@@ -24,8 +24,8 @@ class oropondb:
     if creators == "":
       creators = None
 
-    data = (title,released_t,duration,genre,tag,story,actors,directors,creators)
-    query = "insert into netflix_items (title,released_t,duration,genre,tag,story,actors,directors,creators) values(%s,%s,%s,%s,%s,%s,%s,%s,%s);"
+    data = (title,released_t,duration,genre,tag,story,actors,directors,creators,img_path)
+    query = "insert into netflix_items (title,released_t,duration,genre,tag,story,actors,directors,creators,img_path) values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);"
     cursor.execute(query,data)
 
   def insert_similarity(self,id,similar_id):

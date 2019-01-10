@@ -1,12 +1,12 @@
 import requests
 from lxml.html import fromstring
+from bs4 import BeautifulSoup
 from netflix.oropondb import oropondb
 
 class scraping:
 
     def __init__(self):
-        self.url = "https://www.netflix.com/jp/originals"
-        self.template = "https://www.netflix.com"
+        self.url = "https://www.netflix.com/jp/browse/genre/839338"
         # dbインスタンス作成
         self.db = oropondb()
 
@@ -15,18 +15,40 @@ class scraping:
         r1 = requests.get(self.url)
         # html取得
         root1 = fromstring(r1.text)
-        self.items = root1.xpath("//div[@class='original-title']")
-        # 詳細画面リンク
-        items_link = root1.xpath("//a[@class='original-title-link']")
+        soup = BeautifulSoup(requests.get(self.url).content,'lxml')
 
-        for i in range(len(self.items)):
-            item_link = self.template + items_link[i].attrib['href']
+        # 作品リンク
+        items_link = root1.xpath("//a[@class='nm-collections-title nm-collections-link']")
+
+        # 画像リンク
+        images = []
+        for img in soup.find_all('img', class_="nm-collections-title-img"):
+            # imagesの空配列へsrcを登録
+            images.append(img.get("src"))
+
+        # for target in images:
+        #     re = requests.get(target)
+        #     img_path = target.split('/')[-1]
+        #     with open('/Applications/MAMP/htdocs/NPHoriginal_lolipop_local/webroot/img/' + img_path, 'wb') as f:  # imgフォルダに格納
+        #         # .contentで画像データとして書き込む
+        #         f.write(re.content)
+
+        titles = []
+        for i in range(len(items_link)):
+            item_link = items_link[i].attrib['href']
             # 詳細画面
             r2 = requests.get(item_link)
             root2 = fromstring(r2.text)
 
             # タイトル
             title = root2.xpath("//h1[@class='show-title']")[0].text
+
+            if title in titles:
+                continue
+
+            titles.append(title)
+
+            print(title)
 
             # 公開日
             released_t = root2.xpath("//span[@class='year']")[0].text
@@ -102,10 +124,15 @@ class scraping:
                 creators = creatorslist[0].text
                 creators = creators.translate(str.maketrans({u"\xa0": u"", "、": ","}))
 
-            print(title)
-            print(genre)
+            re = requests.get(images[i])
+            img_binary_data = re.content
+            img_path = str(i+1) + "_" + images[i].split('/')[-1]
 
-            self.db.insert_scraping(title,released_t,duration,genre,tags,story,actors,directors,creators)
+            with open('/Applications/MAMP/htdocs/NPHoriginal_lolipop_local/webroot/img/' + img_path, 'wb') as f:  # imgフォルダに格納
+                # .contentで画像データとして書き込む
+                f.write(img_binary_data)
+
+            self.db.insert_scraping(title,released_t,duration,genre,tags,story,actors,directors,creators,img_path)
 
         self.db.close()
 
